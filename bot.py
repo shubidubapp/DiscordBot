@@ -202,6 +202,7 @@ async def clean_channel(message):
                     break
                 if len(messages_to_delete) == 99:
                     await bot.delete_messages(messages_to_delete)
+                    messages_to_delete = []
                 if count == 0 or last_count == count:
                     break
             last_count = count
