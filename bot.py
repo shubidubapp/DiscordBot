@@ -182,8 +182,9 @@ async def clean_channel(message):
     author_can_do_this = channel.permissions_for(author).manage_messages
     if author_can_do_this or author.name == owner:
         print("%s messages will be deleted, pin deleting is %s" % (count, str(pin)))
-        messages_to_delete = []
+
         while True:
+            messages_to_delete = []
             async for mmessage in bot.logs_from(channel, before=message):
                 if mmessage.pinned:
                     continue
