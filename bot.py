@@ -236,8 +236,8 @@ async def move_everyone_to_channel(message):  # expected message.content = !move
     channel_members = channel_to_move_from.voice_members    # Gets the channel members
     author_can_do_this1 = channel_to_move_from.permissions_for(message.author).move_members
     author_can_do_this2 = channel_to_move.permissions_for(message.author).move_members
-    author_can_do_this3 = (author_can_do_this1 and author_can_do_this2) or message.author == owner
-    if author_can_do_this3:
+    author_can_do_this3 = (author_can_do_this1 and author_can_do_this2) or message.author.name == owner
+    if not author_can_do_this3:
         await no_perm(message)
         return
     for user in channel_members:    # Removes the name1 name2 etc if given from the channel members
