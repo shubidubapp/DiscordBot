@@ -218,17 +218,21 @@ async def move_everyone_to_channel(message):  # expected message.content = !move
             break
     else:
         await bot.send_message(message.channel, "The said channel doesn't exist or It's not a voice channel")
+        await message_delete(message)
         return
     channel_to_move_from = message.author.voice.voice_channel
     if channel_to_move_from is None:    # Checking if the message.author in a voice channel
         await bot.send_message(message.channel, "%s, You should be in a voice channel to use this command."
                                % message.author.name)
+        await message_delete(message)
         return
 
     channel_members = channel_to_move_from.voice_members    # Gets the channel members
     if channel_to_move == channel_to_move_from:
-        await bot.send_message(message.channel, "You're already at that channel %s" % message.author.name)
+        await bot.send_message(message.channel, "You're already at %s, %s" % (channel_to_move.name, message.author.name))
+        await message_delete(message)
         return
+    print(channel_to_move_from, "\t-->\t", channel_to_move)
     author_can_do_this1 = channel_to_move_from.permissions_for(message.author).move_members
     author_can_do_this2 = channel_to_move.permissions_for(message.author).move_members
     author_can_do_this3 = (author_can_do_this1 and author_can_do_this2) or message.author.name == owner
