@@ -306,6 +306,10 @@ async def on_message(message):
             await bot.send_message(message.channel, "Niyazi !!! My Greatest nemesis. BURN HIM!!!! (╯°□°）╯︵ ┻━┻")
     elif message.content.startswith("!move"):
         await move_everyone_to_channel(message)
+    elif "fuck" in message.content:
+        rnd_choice = random.choice([0, 1, 2, 3])
+        if rnd_choice >= 2:
+            await bot.send_message(message.channel, "No! FUCK YOU (╯°□°）╯︵ ┻━┻")
 
 
 bot.run(import_token())
