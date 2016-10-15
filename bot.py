@@ -263,7 +263,6 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    print(message.content)
     if message.content.startswith("!here"):
         await bot.delete_message(message)
         await bot.send_message(message.channel, "I am, The Great %s-sama, here. ┬─┬﻿ ノ( ゜-゜ノ)" % bot.user.name)
