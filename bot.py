@@ -32,18 +32,14 @@ class MusicPlayer:
         await message_delete(message)
         if self.player is None:
             if self.voice_bot is None:
-                print("created voice_bot")
                 self.voice_bot = await bot.join_voice_channel(self.ch)
             try:
-                print("Created player")
                 self.player = await self.voice_bot.create_ytdl_player(url, ytdl_options=opts)
             except youtube_dl.DownloadError:
-                print("Got an error body")
                 await bot.send_message(message.channel, "%%s This is not a valid URL" % message.author.name)
                 return
             self.player.volume = self.volume
             self.player.start()
-            print("Started player")
             sec = self.player.duration % 60
             minute = int((self.player.duration - sec) / 60)
             duration = "%02d.%02d" % (minute, sec)
@@ -82,7 +78,6 @@ class MusicPlayer:
         url_list = self.playlist.pop(0)
         url, author = url_list[0], url_list[1].author
         self.wait = True
-        print(self.player)
         # await self.player.stop()
         self.player.stop()
         self.player = await self.voice_bot.create_ytdl_player(url, ytdl_options=opts)
@@ -114,7 +109,6 @@ class MusicPlayer:
     async def player_loop(self):
         self.wait = False
         while self.player.is_playing() or len(self.playlist) != 0:
-            print("loop loop loop loop")
             if self.wait:
                 return
             if not self.player.is_playing():
@@ -127,9 +121,7 @@ class MusicPlayer:
         msg_split = message.content.split(" ", 2)
         if len(msg_split) >= 2:
             cmd = msg_split[1]
-            print(message.content)
             if (cmd.lower() == "add" or cmd.lower() == "play") and len(msg_split) >= 3:
-                print("Command is play/add")
                 await self.add(url=msg_split[2], message=message)
             elif cmd.lower() == "stop":
                 await self.stop(message)
@@ -240,16 +232,18 @@ async def move_everyone_to_channel(message):  # expected message.content = !move
     if not author_can_do_this3:
         await no_perm(message)
         return
-    for user in channel_members:    # Removes the name1 name2 etc if given from the channel members
+    ni_string = ""
+    copied_members = channel_members.copy()
+    for user in copied_members:    # Removes the name1 name2 etc if given from the channel members
         for ni_user in not_included_users:
             if user.name.lower().startswith(ni_user.lower()):
+                ni_string += user.name, " "
                 not_included_users.remove(ni_user)
                 channel_members.remove(user)
                 break
-    copy = channel_members.copy()
-    for user in copy:
+    for user in copied_members:
         await bot.move_member(user, channel_to_move)
-
+    bot.send_message(message, "%s moved. Everyone except %s" % (message.author, ni_string))
     await message_delete(message)
 
 
@@ -279,7 +273,6 @@ async def on_message(message):
     #         voice_bots.pop(message.server.name)
     elif message.content[0] in "*-+'.," or "niyazi" in message.content.lower():
         rnd_choice = random.choice([0, 1, 2, 3])
-        print(rnd_choice)
         if rnd_choice == 3:
             await bot.send_message(message.channel, "Niyazi !!! My Greatest nemesis. BURN HIM!!!! (╯°□°）╯︵ ┻━┻")
     elif message.content.startswith("!move"):
