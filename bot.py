@@ -205,8 +205,10 @@ async def clean_channel(message):
 
 
 async def move_everyone_to_channel(message):  # expected message.content = !move channel_name, name1 name2...
-    cmd_split = message.content.strip("!move ").split(", ")
+    print(message.content)
+    cmd_split = message.content.replace("!move ", "").split(", ")
     channel_to_move = cmd_split[0]
+    print(cmd_split)
     try:
         not_included_users = cmd_split[1].split(" ")    # name1, name2 are optional, this puts them in a list if given
     except IndexError:
@@ -254,7 +256,8 @@ async def move_everyone_to_channel(message):  # expected message.content = !move
         ni_string += ", ".join(ni_users_for_print)
     for user in copied_members:
         await bot.move_member(user, channel_to_move)
-    move_msg = "%s moved everyone %s to %s" % (message.author.name, ni_string, channel_to_move.name)
+    move_msg = "%s moved everyone %s from %s to %s" % (message.author.name, ni_string,
+                                                       channel_to_move_from.name, channel_to_move.name)
     await bot.send_message(message.channel, move_msg)
     await message_delete(message)
 
