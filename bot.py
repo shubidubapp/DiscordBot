@@ -227,7 +227,7 @@ async def move_everyone_to_channel(message):  # expected message.content = !move
 
     channel_members = channel_to_move_from.voice_members    # Gets the channel members
     if channel_to_move == channel_to_move_from:
-        bot.send_message(message.channel, "You're already at that channel %s" % message.author.name)
+        await bot.send_message(message.channel, "You're already at that channel %s" % message.author.name)
         return
     author_can_do_this1 = channel_to_move_from.permissions_for(message.author).move_members
     author_can_do_this2 = channel_to_move.permissions_for(message.author).move_members
@@ -245,10 +245,12 @@ async def move_everyone_to_channel(message):  # expected message.content = !move
                 not_included_users.remove(ni_user)
                 copied_members.remove(user)
                 break
-    ni_string = ", ".join(ni_users_for_print)
+    if len(ni_users_for_print) != 0:
+        ni_string = " except "
+        ni_string += ", ".join(ni_users_for_print)
     for user in copied_members:
         await bot.move_member(user, channel_to_move)
-    move_msg = "%s moved everyone except %s to %s" % (message.author.name, ni_string, channel_to_move.name)
+    move_msg = "%s moved everyone %s to %s" % (message.author.name, ni_string, channel_to_move.name)
     await bot.send_message(message.channel, move_msg)
     await message_delete(message)
 
