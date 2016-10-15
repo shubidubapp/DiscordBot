@@ -237,7 +237,7 @@ async def move_everyone_to_channel(message):  # expected message.content = !move
     for user in copied_members:    # Removes the name1 name2 etc if given from the channel members
         for ni_user in not_included_users:
             if user.name.lower().startswith(ni_user.lower()):
-                ni_string += user.name, " "
+                ni_string += user.name + " "
                 not_included_users.remove(ni_user)
                 channel_members.remove(user)
                 break
