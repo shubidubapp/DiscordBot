@@ -239,11 +239,11 @@ async def move_everyone_to_channel(message):  # expected message.content = !move
             if user.name.lower().startswith(ni_user.lower()):
                 ni_string += user.name + " "
                 not_included_users.remove(ni_user)
-                channel_members.remove(user)
+                copied_members.remove(user)
                 break
     for user in copied_members:
         await bot.move_member(user, channel_to_move)
-    await bot.send_message(message.channel, "%s moved. Everyone except %s" % (message.author, ni_string))
+    await bot.send_message(message.channel, "%s moved. Everyone except %s" % (message.author.name, ni_string))
     await message_delete(message)
 
 
