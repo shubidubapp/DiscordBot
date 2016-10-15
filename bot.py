@@ -195,18 +195,16 @@ async def clean_channel(message):
             async for mmessage in bot.logs_from(channel, before=message):
                 if mmessage.pinned:
                     continue
-                if count != -1:
-                    count -= 1
-                messages_to_delete.append(mmessage)
-                if count == 0:
-                    break
-                if len(messages_to_delete) == 99:
-                    await bot.delete_messages(messages_to_delete)
-                    messages_to_delete = []
-                if count == 0 or last_count == count:
-                    break
+                else:
+                    if count == 0:
+                        break
+                    else:
+                        count -= 1
+                        messages_to_delete.append(mmessage)
+            await bot.delete_messages(messages_to_delete)
+            if count == 0 or last_count == count:
+                break
             last_count = count
-        await bot.delete_messages(messages_to_delete)
         await bot.delete_message(message)
         return
 
