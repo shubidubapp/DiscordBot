@@ -9,13 +9,18 @@ opts = {
     'default_search': 'auto',
     'quiet': True,
 }
+
+
 def import_token():
     token = open("token.txt").readline().strip()
     return token
 
 async def message_delete(message):
-    if message is not None:
-        await bot.delete_message(message)
+    try:
+        if message is not None:
+            await bot.delete_message(message)
+    except discord.NotFound:
+        pass
 
 
 class MusicPlayer:
@@ -182,23 +187,30 @@ async def clean_channel(message):
     author_can_do_this = channel.permissions_for(author).manage_messages
     if author_can_do_this or author.name == owner:
         print("%s messages will be deleted, pin deleting is %s" % (count, str(pin)))
-
+        delete_count = 0
         while True:
             messages_to_delete = []
             async for mmessage in bot.logs_from(channel, before=message):
                 if mmessage.pinned:
                     continue
                 else:
-                    if count == 0:
-                        break
-                    else:
+                    if count >= 1 or count <= -1:
                         count -= 1
                         messages_to_delete.append(mmessage)
-            await bot.delete_messages(messages_to_delete)
+                    elif count == 0:
+                        break
+            delete_count += len(messages_to_delete)
+            print(count, "\t:\t", last_count)
+            if len(messages_to_delete) == 1:
+                await message_delete(messages_to_delete[0])
+            elif len(messages_to_delete) >= 2:
+                await bot.delete_messages(messages_to_delete)
             if count == 0 or last_count == count:
                 break
+
             last_count = count
         await bot.delete_message(message)
+        await bot.send_message(channel, "%s messages have been deleted. By %s" % (delete_count, author.name))
         return
 
     else:
@@ -232,7 +244,8 @@ async def move_everyone_to_channel(message):  # expected message.content = !move
 
     channel_members = channel_to_move_from.voice_members    # Gets the channel members
     if channel_to_move == channel_to_move_from:
-        await bot.send_message(message.channel, "You're already at %s, %s" % (channel_to_move.name, message.author.name))
+        await bot.send_message(message.channel, "You're already at %s, %s" % (channel_to_move.name,
+                                                                              message.author.name))
         await message_delete(message)
         return
     print(channel_to_move_from, "\t-->\t", channel_to_move)
