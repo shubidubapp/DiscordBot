@@ -282,15 +282,15 @@ async def move_everyone_to_channel(message):  # expected message.content = !move
 async def tts_command_add(message):
     if message.channel.permissions_for(bot.user).send_tts_messages() and \
             message.channel.permissions_for(message.author).send_tts_messages():
-        expected_message_content = ""
-        pattern = re.compile(expected_message_content)
-        keyword = message.content.split(" ", 1)[0][1:]
-        tts_message = message.content.split(" ", 1)[1].strip()
+        msg = message.content.replace("!learn", "")
+        keyword = msg.split(" ", 1)[0][1:]
+        tts_message = msg(" ", 1)[1].strip()
         if keyword not in keywords and keyword not in tts_keywords:
             tts_file = open(tts_file_name, "a")
             tts_file.write("%s %s\n" % (keyword, tts_message))
             tts_keywords.append(keyword)
             tts_file.close()
+            await bot.send_message(message.channel, "%s taught me %s" % (message.author, keyword))
         else:
             await bot.send_message(message.channel, "%s, you can't use this keyword." % message.author)
     else:
@@ -298,10 +298,31 @@ async def tts_command_add(message):
                                "%s, one of us doesn't have permission to send TTS Messages in this channel")
 
 
+async def tts_command_remove(message):
+    if message.channel.permissions_for(message.author).administrator:
+        msg = message.content.replace("!remove ", "")
+        keyword = msg.split(" ", 1)[0]
+        if keyword in keywords:
+            tts_file = open(tts_file_name)
+            lines = tts_file.readlines()
+            tts_file.close()
+            tts_file = open(tts_file_name, "w")
+            for line in lines:
+                tts_keyword = line.split(" ", 1)[0][1:]
+                if keyword != tts_keyword:
+                    tts_file.write(line)
+            keywords.remove(keyword)
+
+
+async def tts_learned_so_far(message):
+    output = ", ".join(keywords)
+    await bot.send_message(message.author, "I know these: %s" % output)
+
+
 async def tts_command_send(message):
     if message.channel.permissions_for(bot.user).send_tts_messages() and \
             message.channel.permissions_for(message.author).send_tts_messages():
-        keyword = message.content.split(" ", 1)[0][1:]
+        keyword = message.content.replace("!", "")
         if keyword in keywords:
             tts_file = open(tts_file_name, "r")
             lines = tts_file.readlines()
@@ -310,6 +331,7 @@ async def tts_command_send(message):
                 if keyword == pre_saved_keyword:
                     tts_message = line.split(" ", 1)[1]
                     await bot.send_message(message.channel, "%s says:%s" % (message.author, tts_message), tts=True)
+            tts_file.close()
 
 
 @bot.event
@@ -353,6 +375,15 @@ async def on_message(message):
             if rnd_choice >= 2 or bot.counter == 4:
                 bot.counter = 0
                 await bot.send_message(message.channel, "No! FUCK YOU (╯°□°）╯︵ ┻━┻")
+        elif message.content.startswith("!learn"):
+            tts_command_add(message)
+        elif message.content.startswith("!remove"):
+            tts_command_remove(message)
+        elif message.content.startswith("!magicwords"):
+            tts_learned_so_far(message)
+        elif message.content.replace("!", "").strip() in keywords:
+            tts_command_send(message)
+
 
 bot.counter = 0
 bot.run(import_token())
