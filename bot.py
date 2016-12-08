@@ -296,6 +296,7 @@ async def tts_command_add(message):
     else:
         await bot.send_message(message.channel,
                                "%s, one of us doesn't have permission to send TTS Messages in this channel")
+    await message_delete(message)
 
 
 async def tts_command_remove(message):
@@ -312,11 +313,13 @@ async def tts_command_remove(message):
                 if keyword != tts_keyword:
                     tts_file.write(line)
             keywords.remove(keyword)
+    await message_delete(message)
 
 
 async def tts_learned_so_far(message):
     output = ", ".join(tts_keywords)
     await bot.send_message(message.author, "I know these: %s" % output)
+    await message_delete(message)
 
 
 async def tts_command_send(message):
@@ -332,6 +335,7 @@ async def tts_command_send(message):
                     tts_message = line.split(" ", 1)[1]
                     await bot.send_message(message.channel, "%s says:%s" % (message.author, tts_message), tts=True)
             tts_file.close()
+    await message_delete(message)
 
 
 @bot.event
@@ -376,13 +380,13 @@ async def on_message(message):
                 bot.counter = 0
                 await bot.send_message(message.channel, "No! FUCK YOU (╯°□°）╯︵ ┻━┻")
         elif message.content.startswith("!learn"):
-            tts_command_add(message)
+            await tts_command_add(message)
         elif message.content.startswith("!remove"):
-            tts_command_remove(message)
+            await tts_command_remove(message)
         elif message.content.startswith("!magicwords"):
-            tts_learned_so_far(message)
+            await tts_learned_so_far(message)
         elif message.content.replace("!", "").strip() in keywords:
-            tts_command_send(message)
+            await tts_command_send(message)
 
 
 bot.counter = 0
