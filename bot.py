@@ -282,7 +282,7 @@ async def move_everyone_to_channel(message):  # expected message.content = !move
 async def tts_command_add(message):
     if message.channel.permissions_for(bot.user).send_tts_messages() and \
             message.channel.permissions_for(message.author).send_tts_messages():
-        msg = message.content.replace("!learn", "")
+        msg = message.content.replace("!learn ", "")
         keyword = msg.split(" ", 1)[0][1:]
         tts_message = msg(" ", 1)[1].strip()
         if keyword not in keywords and keyword not in tts_keywords:
