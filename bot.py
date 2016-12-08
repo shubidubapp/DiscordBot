@@ -380,6 +380,7 @@ async def on_message(message):
                 bot.counter = 0
                 await bot.send_message(message.channel, "No! FUCK YOU (╯°□°）╯︵ ┻━┻")
         elif message.content.startswith("!learn"):
+            await bot.send_message(message.channel, "Sex sex")
             await tts_command_add(message)
         elif message.content.startswith("!remove"):
             await tts_command_remove(message)
