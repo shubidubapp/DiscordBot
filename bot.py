@@ -2,6 +2,7 @@ import random
 import discord
 from time import sleep
 import youtube_dl
+import re
 bot = discord.Client()
 voice_bots = {}
 owner = "Shubidubapp"   # Yes. Bot does listen to my commands in any case. I'm his father ofc he does that.
@@ -9,7 +10,9 @@ opts = {
     'default_search': 'auto',
     'quiet': True,
 }
-
+tts_file_name = "tts_commands.txt"
+keywords = ["!here", "!clean", "!join", "!move"]
+tts_keywords = []
 
 def import_token():
     token = open("token.txt").readline().strip()
@@ -258,11 +261,12 @@ async def move_everyone_to_channel(message):  # expected message.content = !move
     ni_string = ""
     ni_users_for_print = []
     copied_members = channel_members.copy()
+    not_included_users_copy = not_included_users.copy()
     for user in copied_members:    # Removes the name1 name2 etc if given from the channel members
-        for ni_user in not_included_users:
+        for ni_user in not_included_users_copy:
             if user.name.lower().startswith(ni_user.lower()):
                 ni_users_for_print.append(user.name)
-                not_included_users.remove(ni_user)
+                not_included_users_copy.remove(ni_user)
                 copied_members.remove(user)
                 break
     if len(ni_users_for_print) != 0:
@@ -275,42 +279,81 @@ async def move_everyone_to_channel(message):  # expected message.content = !move
     await bot.send_message(message.channel, move_msg)
     await message_delete(message)
 
+async def tts_command_add(message):
+    if message.channel.permissions_for(bot.user).send_tts_messages() and \
+            message.channel.permissions_for(message.author).send_tts_messages():
+        expected_message_content = ""
+        pattern = re.compile(expected_message_content)
+        keyword = message.content.split(" ", 1)[0][1:]
+        tts_message = message.content.split(" ", 1)[1].strip()
+        if keyword not in keywords and keyword not in tts_keywords:
+            tts_file = open(tts_file_name, "a")
+            tts_file.write("%s %s\n" % (keyword, tts_message))
+            tts_keywords.append(keyword)
+            tts_file.close()
+        else:
+            await bot.send_message(message.channel, "%s, you can't use this keyword." % message.author)
+    else:
+        await bot.send_message(message.channel,
+                               "%s, one of us doesn't have permission to send TTS Messages in this channel")
+
+
+async def tts_command_send(message):
+    if message.channel.permissions_for(bot.user).send_tts_messages() and \
+            message.channel.permissions_for(message.author).send_tts_messages():
+        keyword = message.content.split(" ", 1)[0][1:]
+        if keyword in keywords:
+            tts_file = open(tts_file_name, "r")
+            lines = tts_file.readlines()
+            for line in lines:
+                pre_saved_keyword = line.split(" ", 1)[0]
+                if keyword == pre_saved_keyword:
+                    tts_message = line.split(" ", 1)[1]
+                    await bot.send_message(message.channel, "%s says:%s" % (message.author, tts_message), tts=True)
+
 
 @bot.event
 async def on_ready():
     bot.wait_until_login()
-    print("I am, The Great %s-sama, here." % bot.user.name)
+    with open(tts_file_name, "r") as tts_file:
+        lines = tts_file.readlines()
+        for line in lines:
+            line = line.strip()
+            tts_keywords.append(line.split(" ", 1)[0])
 
 
 @bot.event
 async def on_message(message):
-    if message.content.startswith("!here"):
-        await bot.delete_message(message)
-        await bot.send_message(message.channel, "I am, The Great %s-sama, here. ┬─┬﻿ ノ( ゜-゜ノ)" % bot.user.name)
-    elif message.content.startswith("!join "):
-        join(message)
-    elif message.content.startswith("!clean") or message.content.startswith("!clear"):
-        await clean_channel(message)
-    # elif message.content.startswith("!music "):
-    #     if message.server.name in voice_bots.keys():
-    #         mplayer = voice_bots[message.server.name]
-    #     else:
-    #         mplayer = create(message)
-    #     print(mplayer)
-    #     await mplayer.handle_music(message)
-    #     if mplayer.voice_bot is None:
-    #         voice_bots.pop(message.server.name)
-    elif message.content[0] in "*-+'.," or "niyazi" in message.content.lower():
-        rnd_choice = random.choice([0, 1, 2, 3])
-        if rnd_choice == 3:
-            await bot.send_message(message.channel, "Niyazi !!! My Greatest nemesis. BURN HIM!!!! (╯°□°）╯︵ ┻━┻")
-    elif message.content.startswith("!move"):
-        await move_everyone_to_channel(message)
-    elif "fuck" in message.content:
-        rnd_choice = random.choice([0, 1, 2, 3])
-        if rnd_choice >= 2:
-            await bot.send_message(message.channel, "No! FUCK YOU (╯°□°）╯︵ ┻━┻")
+    if message.author != bot.user:
+        if message.content.startswith("!here"):
+            await bot.delete_message(message)
+            await bot.send_message(message.channel, "I am, The Great %s-sama, here. ┬─┬﻿ ノ( ゜-゜ノ)" % bot.user.name)
+        elif message.content.startswith("!join "):
+            join(message)
+        elif message.content.startswith("!clean") or message.content.startswith("!clear"):
+            await clean_channel(message)
+        # elif message.content.startswith("!music "):
+        #     if message.server.name in voice_bots.keys():
+        #         mplayer = voice_bots[message.server.name]
+        #     else:
+        #         mplayer = create(message)
+        #     print(mplayer)
+        #     await mplayer.handle_music(message)
+        #     if mplayer.voice_bot is None:
+        #         voice_bots.pop(message.server.name)
+        elif message.content[0] in "*-+'.," or "niyazi" in message.content.lower():
+            rnd_choice = random.choice([0, 1, 2, 3])
+            if rnd_choice == 3:
+                await bot.send_message(message.channel, "Niyazi !!! My Greatest nemesis. BURN HIM!!!! (╯°□°）╯︵ ┻━┻")
+        elif message.content.startswith("!move"):
+            await move_everyone_to_channel(message)
+        elif "fuck" in message.content:
+            rnd_choice = random.choice([0, 1, 2, 3])
+            bot.counter += 1
+            if rnd_choice >= 2 or bot.counter == 4:
+                bot.counter = 0
+                await bot.send_message(message.channel, "No! FUCK YOU (╯°□°）╯︵ ┻━┻")
 
-
+bot.counter = 0
 bot.run(import_token())
 bot.close()
