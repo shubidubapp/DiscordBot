@@ -318,7 +318,7 @@ async def tts_command_remove(message):
 
 async def tts_learned_so_far(message):
     output = ", ".join(tts_keywords)
-    await bot.send_message(message.author, "I know these: %s" % output)
+    await bot.send_message(message.channel, "I know these: %s" % output)
     await message_delete(message)
 
 
