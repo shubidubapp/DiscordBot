@@ -280,39 +280,41 @@ async def move_everyone_to_channel(message):  # expected message.content = !move
     await message_delete(message)
 
 async def tts_command_add(message):
-    if message.channel.permissions_for(bot.user).send_tts_messages() and \
-            message.channel.permissions_for(message.author).send_tts_messages():
+    if message.channel.permissions_for(message.author).send_tts_messages:
         msg = message.content.replace("!learn ", "")
-        keyword = msg.split(" ", 1)[0][1:]
-        tts_message = msg(" ", 1)[1].strip()
+        keyword = msg.split(" ", 1)[0]
+        tts_message = msg.split(" ", 1)[1].strip()
         if keyword not in keywords and keyword not in tts_keywords:
             tts_file = open(tts_file_name, "a")
             tts_file.write("%s %s\n" % (keyword, tts_message))
             tts_keywords.append(keyword)
             tts_file.close()
-            await bot.send_message(message.channel, "%s taught me %s" % (message.author, keyword))
+            await bot.send_message(message.channel, "%s taught me %s" % (message.author.name, keyword))
         else:
-            await bot.send_message(message.channel, "%s, you can't use this keyword." % message.author)
+            await bot.send_message(message.channel, "%s, you can't use this keyword." % message.author.name)
     else:
         await bot.send_message(message.channel,
-                               "%s, one of us doesn't have permission to send TTS Messages in this channel")
+                               "%s, you don't have permission to send TTS Messages in this channel" % message.author.name)
     await message_delete(message)
 
 
 async def tts_command_remove(message):
     if message.channel.permissions_for(message.author).administrator:
-        msg = message.content.replace("!remove ", "")
-        keyword = msg.split(" ", 1)[0]
-        if keyword in keywords:
+        keyword = message.content.replace("!remove ", "")
+        if keyword in tts_keywords:
             tts_file = open(tts_file_name)
             lines = tts_file.readlines()
             tts_file.close()
             tts_file = open(tts_file_name, "w")
             for line in lines:
-                tts_keyword = line.split(" ", 1)[0][1:]
+                tts_keyword = line.split(" ", 1)[0]
                 if keyword != tts_keyword:
                     tts_file.write(line)
-            keywords.remove(keyword)
+            tts_keywords.remove(keyword)
+            tts_file.close()
+            bot.send_message(message.channel, "%s removed %s" % (message.author.name, keyword))
+        else:
+            bot.send_message(message.channel, "That keyword doesn't exist")
     await message_delete(message)
 
 
@@ -323,19 +325,19 @@ async def tts_learned_so_far(message):
 
 
 async def tts_command_send(message):
-    if message.channel.permissions_for(bot.user).send_tts_messages() and \
-            message.channel.permissions_for(message.author).send_tts_messages():
+    if message.channel.permissions_for(message.author).send_tts_messages:
         keyword = message.content.replace("!", "")
-        if keyword in keywords:
+        if keyword in tts_keywords:
             tts_file = open(tts_file_name, "r")
             lines = tts_file.readlines()
             for line in lines:
                 pre_saved_keyword = line.split(" ", 1)[0]
                 if keyword == pre_saved_keyword:
                     tts_message = line.split(" ", 1)[1]
-                    await bot.send_message(message.channel, "%s says:%s" % (message.author, tts_message), tts=True)
+                    await bot.send_message(message.channel, "%s says:%s" % (message.author.name, tts_message), tts=True)
+                    break
             tts_file.close()
-    await message_delete(message)
+            await message_delete(message)
 
 
 @bot.event
@@ -380,13 +382,12 @@ async def on_message(message):
                 bot.counter = 0
                 await bot.send_message(message.channel, "No! FUCK YOU (╯°□°）╯︵ ┻━┻")
         elif message.content.startswith("!learn"):
-            await bot.send_message(message.channel, "Sex sex")
             await tts_command_add(message)
         elif message.content.startswith("!remove"):
             await tts_command_remove(message)
         elif message.content.startswith("!magicwords"):
             await tts_learned_so_far(message)
-        elif message.content.replace("!", "").strip() in keywords:
+        elif message.content.startswith("!"):
             await tts_command_send(message)
 
 
